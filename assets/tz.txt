@@ -1,0 +1,65 @@
+Got it — you used the prompt in a regular chat, not Claude Code yet. Let me rewrite the complete prompt with Trace-Any-Denial baked in from the start, ready for Claude Code:
+
+```
+ROLE
+You are an analyst, methodologist, knowledge architect, and frontend engineer. 
+For the first three tasks, work as a thinking partner — not a secretary. For the 
+final task, actually build and deploy the site.
+
+CONTEXT
+We're building a presentation site for Kombocode (domain: kombocode.ai) — a 
+boutique AI/ML engineering consultancy. The niche: production-grade engineering 
+for AI systems in regulated healthcare (payer-tech / care-management SaaS). The 
+site has to make technical buyers take us seriously.
+
+CRITICAL: The founder (Lena) has already built Trace-Any-Denial Diagnostic 
+(https://trace-any-denial.vercel.app/) — a live proof-of-concept running on 
+synthetic data that demonstrates whether payer AI denial decisions can be 
+reconstructed under audit pressure. This is a sales-call demo asset, not a lead-
+capture tool. It should be featured on kombocode.ai as a credibility lever.
+
+SOURCE MATERIAL
+[IF AVAILABLE — paste a transcription of your brainstorm/voice-note here; it will 
+enrich and refine the context below. If not, work from this baseline:]
+— Founder: Lena (Elena Rodin), Doylestown PA. 20+ years of enterprise engineering.
+— Background: Boeing, Lockheed Martin, AstraZeneca, Comcast, Bank of America, 
+  McKesson Health Solutions, AmeriHealth Administrators, MEDecision. Advanced ML 
+  (TensorFlow) certification. Stack: Java, React, Angular, Kotlin, AWS.
+— Lane / positioning: the gap between systems that are "compliant on paper" and 
+  ones that actually hold up in production. Production-grade engineering reality 
+  for AI in regulated healthcare.
+— ICP: CTO, VP Engineering, Head of Platform, Head of AI, CDO, technical founders 
+  at payer-tech and care-management SaaS companies, Series B to growth stage 
+  (80–300 people), US.
+— Two offerings: (1) Production Stabilization Retainer — ongoing engineering for 
+  live-but-fragile AI/ML systems that are failing audits or burning cloud budget; 
+  (2) Architect-and-Build — scoped engagements to design and ship production-grade 
+  AI/ML systems in regulated environments.
+— Two case studies (frame them around the transferable pattern — rescuing/
+  stabilizing regulated-healthcare AI in production — so they resonate with 
+  payer-tech buyers): (a) stabilized a clinical-trial prediction platform and 
+  significantly cut AWS costs; (b) rescued a shelved in-house LLM (clinical-trial 
+  patient enrollment) and brought it through audit into live production.
+— Buyer vocabulary (use it; avoid fluff like "AI governance / transformation"): 
+  production stability, audit-to-production, claims/prior-auth AI precision, cloud 
+  cost, CMS exposure.
+— Proof asset: Trace-Any-Denial Diagnostic — synthetic-data POC showing 
+  audit-traceable denial reconstruction. Label it clearly as POC/synthetic; frame 
+  it as a demo to run on sales calls, not a finished product. It proves Lena 
+  understands the exact problem payer CTOs have.
+
+YOUR TASKS
+
+1. Analysis and clarification
+Read the material carefully. Give me a list of clarifying questions — only ones 
+that genuinely affect understanding of the task, could change the structure of the 
+conclusions, and are critical for correct interpretation. Skip formal or obvious 
+questions.
+
+2. Prepare the material (RAG-style)
+Extract and structure what matters most: key ideas and meaning; definitions and 
+terms; decisions, hypotheses, constraints; facts, agreements, and emphases.
+
+3. Site structure
+Propose the structure for the presentation site: the narrative logic (from context 
+to conclusions), the key blocks and transitions, what to show and what to omit...

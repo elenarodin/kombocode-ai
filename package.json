@@ -1,0 +1,15 @@
+{
+  "name": "kombocode-ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node serve.mjs",
+    "shot": "node screenshot.mjs http://localhost:3000"
+  },
+  "dependencies": {
+    "puppeteer": "^25.0.4"
+  },
+  "devDependencies": {
+    "vercel": "^54.4.1"
+  }
+}

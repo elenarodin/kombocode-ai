@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kombocode — Production-grade engineering for healthcare AI under audit</title>
+<meta name="description" content="Kombocode is an engineering practice for payer-tech and care-management teams whose AI has to hold up in production and under audit." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Merriweather:wght@300;400;700;900&family=Source+Serif+4:opsz,wght@8..60,300..900&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink:     '#3a3529',  /* deep warm brown — dark surfaces / dark text */
+          ink2:    '#2a2521',  /* extra-dark — toolbars, deep states */
+          paper:   '#e4d7b0',  /* sandy beige — page bg */
+          paper2:  '#decea0',  /* slightly darker — alt surfaces */
+          card:    '#e7dbbf',  /* raised lighter */
+          cream:   '#fdfbf6',  /* near-white — text on dark */
+          accent:  '#8d9d4f',  /* olive primary */
+          sage:    '#9db18c',  /* sage — soft accent */
+          fg:      '#5c4b3e',  /* warm mid-brown — body text */
+          mute:    '#85776a',  /* muted brown */
+          claybd:  '#b19681',  /* clay border */
+        },
+        fontFamily: {
+          sans:  ['Merriweather', 'Georgia', 'ui-serif', 'serif'],
+          serif: ['"Source Serif 4"', 'Georgia', 'ui-serif', 'serif'],
+          mono:  ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        letterSpacing: {
+          tightest: '-0.025em',
+          tightish: '-0.012em',
+          monowide: '0.08em',
+          monoxl:   '0.14em',
+        },
+        boxShadow: {
+          plate: '3px 3px 2px 0 hsl(88 22% 35% / 0.15)',
+          plateLg: '5px 5px 2px 0 hsl(88 22% 35% / 0.2)',
+          chip:  'inset 0 0 0 1px hsl(28 23% 36% / 0.18)',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  :root {
+    --ink:     #3a3529;
+    --ink2:    #2a2521;
+    --paper:   #e4d7b0;
+    --paper2:  #decea0;
+    --card:    #e7dbbf;
+    --cream:   #fdfbf6;
+    --accent:  #8d9d4f;
+    --sage:    #9db18c;
+    --fg:      #5c4b3e;
+    --mute:    #85776a;
+    --claybd:  #b19681;
+    --shadow:       3px 3px 2px 0 hsl(88 22% 35% / 0.15);
+    --shadow-lg:    5px 5px 2px 0 hsl(88 22% 35% / 0.20);
+    --shadow-soft:  2px 2px 1px 0 hsl(88 22% 35% / 0.10);
+    --radius:  7px;
+  }
+  html, body { background: var(--paper); color: var(--fg); }
+  body {
+    font-family: 'Merriweather', Georgia, ui-serif, serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection { background: var(--accent); color: var(--cream); }
+
+  /* Paper grain — sage-tinted, lower opacity */
+  .grain::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.29 0 0 0 0 0.24 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: .25;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
+
+  /* Hairline rule */
+  .rule        { background: hsl(28 23% 36% / 0.22); height: 1px; width: 100%; }
+  .rule-strong { background: hsl(28 23% 36% / 0.40); height: 1px; width: 100%; }
+
+  /* Eyebrow mono with leading bar */
+  .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .eyebrow::before {
+    content: "";
+    display: inline-block;
+    width: 28px;
+    height: 1px;
+    background: currentColor;
+    opacity: .8;
+  }
+
+  /* Display headings — Source Serif 4 */
+  .display {
+    font-family: 'Source Serif 4', Georgia, ui-serif, serif;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+  }
+  .display-tight { line-height: 1.0; }
+
+  /* Buttons — offset shadow, olive on hover */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 14px;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Source Serif 4', Georgia, ui-serif, serif;
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 0.005em;
+    padding: 15px 22px 15px 26px;
+    border-radius: var(--radius);
+    border: 1px solid var(--ink);
+    transition: transform 200ms cubic-bezier(.2,.7,.2,1), background 200ms ease, color 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+  .btn-primary:hover { background: var(--accent); border-color: var(--accent); transform: translate(-1px,-1px); box-shadow: 4px 4px 2px 0 hsl(88 22% 35% / 0.22); }
+  .btn-primary:active { transform: translate(0,0); box-shadow: var(--shadow-soft); }
+  .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .btn-primary .arrow {
+    width: 18px; height: 10px; position: relative; display: inline-block;
+    transition: transform 220ms cubic-bezier(.2,.7,.2,1);
+  }
+  .btn-primary .arrow::before, .btn-primary .arrow::after {
+    content: ""; position: absolute; right: 0; background: currentColor;
+  }
+  .btn-primary .arrow::before { top: 50%; height: 1.5px; width: 18px; transform: translateY(-50%); }
+  .btn-primary .arrow::after  { top: 50%; right: 0; width: 8px; height: 8px; border-top: 1.5px solid currentColor; border-right: 1.5px solid currentColor; transform: translateY(-50%) rotate(45deg); background: transparent; }
+  .btn-primary:hover .arrow { transform: translateX(4px); }
+
+  /* Tertiary link */
+  .link-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--fg);
+    border-bottom: 1px solid hsl(28 23% 36% / 0.4);
+    padding-bottom: 2px;
+    transition: color 200ms ease, border-color 200ms ease;
+  }
+  .link-mono:hover { color: var(--accent); border-color: var(--accent); }
+  .link-mono:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 1px; }
+
+  /* Page-load reveal — only transform/opacity */
+  .reveal { opacity: 0; transform: translateY(8px); animation: reveal 700ms cubic-bezier(.2,.7,.2,1) forwards; }
+  .reveal[data-delay="1"] { animation-delay: 80ms; }
+  .reveal[data-delay="2"] { animation-delay: 180ms; }
+  .reveal[data-delay="3"] { animation-delay: 280ms; }
+  .reveal[data-delay="4"] { animation-delay: 380ms; }
+  .reveal[data-delay="5"] { animation-delay: 480ms; }
+  @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+
+  /* Section eyebrow with index marker */
+  .section-mark {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: hsl(28 23% 36% / 0.7);
+  }
+  .section-mark .num { color: var(--accent); margin-right: 12px; }
+
+  /* Engagement card hover */
+  .card { transition: transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease, border-color 220ms ease; }
+  .card:hover { transform: translate(-1px,-1px); border-color: var(--claybd); box-shadow: var(--shadow); }
+
+  /* Diagnostic frame — warm dark chrome */
+  .frame {
+    position: relative;
+    background: var(--ink);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+  .frame-toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    background: var(--ink2);
+    border-bottom: 1px solid hsl(40 30% 80% / 0.06);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: hsl(40 30% 80% / 0.22); }
+  .url-pill {
+    margin-left: 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: hsl(40 50% 90% / 0.65);
+    background: hsl(40 30% 80% / 0.06);
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid hsl(40 30% 80% / 0.1);
+  }
+
+  /* Block quote pull-line */
+  .pull {
+    font-family: 'Source Serif 4', Georgia, ui-serif, serif;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.22;
+  }
+
+  /* Numeric markers on approach steps */
+  .step-num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+
+  /* Accent underline for inline emphasis */
+  .underline-accent {
+    background-image: linear-gradient(to right, var(--accent), var(--accent));
+    background-size: 100% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    padding-bottom: 3px;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { animation: none !important; opacity: 1 !important; transform: none !important; }
+    .btn-primary, .card, .btn-primary .arrow { transition: none !important; }
+  }
+
+  /* Body prose helpers */
+  .prose-body { font-size: 16px; line-height: 1.75; color: var(--fg); letter-spacing: 0; }
+  .prose-body strong { color: var(--ink); font-weight: 700; }
+  .meta-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; color: hsl(28 23% 36% / 0.72); }
+</style>
+
+<!-- Vercel Web Analytics — auto-served from /_vercel/insights when hosted on Vercel -->
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="relative overflow-x-hidden">
+  <div class="grain fixed inset-0 z-[1]"></div>
+
+  <!-- Nav -->
+  <header class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 pt-7 sm:pt-9 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-3 group" aria-label="Kombocode home">
+      <span class="inline-block w-[10px] h-[10px] bg-accent rotate-45"></span>
+      <span class="font-mono text-[13px] tracking-monowide uppercase text-ink">Kombocode</span>
+    </a>
+    <nav class="flex items-center gap-7">
+      <a href="#engagements" class="hidden sm:inline-block font-mono text-[12px] tracking-monowide uppercase text-ink/70 hover:text-ink transition-colors">Engagements</a>
+      <a href="#proof" class="hidden sm:inline-block font-mono text-[12px] tracking-monowide uppercase text-ink/70 hover:text-ink transition-colors">Proof</a>
+      <a href="https://calendly.com/elena-rodin/30min" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 font-mono text-[12px] tracking-monowide uppercase text-ink hover:text-accent transition-colors group">
+        Book a call
+        <span class="inline-block w-3 h-px bg-current transition-all group-hover:w-5"></span>
+      </a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section id="hero" class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 pt-16 sm:pt-20 pb-20 sm:pb-24 overflow-hidden">
+    <canvas id="hero-canvas" class="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true"></canvas>
+    <div class="relative z-10 grid grid-cols-12 gap-x-10 gap-y-14 items-start">
+
+      <!-- LEFT: eyebrow + headline + sub + CTAs -->
+      <div class="col-span-12 lg:col-span-7">
+        <div class="reveal" data-delay="1">
+          <span class="eyebrow">Kombocode · Engineering practice</span>
+        </div>
+
+        <h1 class="reveal display display-tight mt-7 sm:mt-9 text-[40px] sm:text-[52px] lg:text-[60px] max-w-[22ch] text-balance" data-delay="2">
+          When CMS asks why your AI denied the claim, can you <span class="underline-accent">reconstruct the decision</span>?
+        </h1>
+
+        <p class="reveal mt-7 sm:mt-8 max-w-[52ch] text-[17px] sm:text-[19px] leading-[1.6] text-ink/80" data-delay="3">
+          Production-grade engineering for payer and care-management AI under audit pressure.
+        </p>
+
+        <div class="reveal mt-9 sm:mt-11 flex flex-wrap items-center gap-x-10 gap-y-5" data-delay="4">
+          <a href="https://calendly.com/elena-rodin/30min" target="_blank" rel="noopener noreferrer" class="btn-primary">
+            Book a 30-min technical call
+            <span class="arrow" aria-hidden="true"></span>
+          </a>
+          <a href="#proof" class="link-mono">See the Trace-Any-Denial diagnostic — live POC · synthetic data ↗</a>
+        </div>
+      </div>
+
+      <!-- RIGHT: compact diagnostic card — the visual answer to the headline -->
+      <div class="reveal col-span-12 lg:col-span-5 lg:mt-2" data-delay="5">
+        <a href="#proof" class="block frame group" aria-label="Trace-Any-Denial diagnostic — live POC on synthetic data">
+          <div class="frame-toolbar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="url-pill">trace-any-denial.vercel.app</span>
+          </div>
+          <div class="p-5 sm:p-6">
+            <!-- Header row -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="font-mono text-[10px] tracking-monoxl uppercase text-paper/45">Synthetic claim · #SC-7041-AX</div>
+              <div class="flex items-center gap-1.5 font-mono text-[10px] tracking-monoxl uppercase text-accent shrink-0">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent"></span>
+                Reconstructed
+              </div>
+            </div>
+
+            <!-- Model output verdict -->
+            <div class="mt-5 border border-paper/15 rounded-sm p-4">
+              <div class="font-mono text-[9px] uppercase tracking-monoxl text-paper/45">Model output</div>
+              <div class="mt-1.5 flex items-baseline gap-3 flex-wrap">
+                <span class="display text-accent text-[34px] sm:text-[38px] leading-none tracking-tightest">DENY</span>
+                <span class="font-mono text-[10.5px] text-paper/70">conf 0.871 · PA-117</span>
+              </div>
+            </div>
+
+            <!-- Audit trail -->
+            <div class="mt-3 border border-paper/15 rounded-sm p-4">
+              <div class="flex items-baseline justify-between gap-3">
+                <div class="font-mono text-[9px] uppercase tracking-monoxl text-paper/45">Audit trail</div>
+                <div class="font-mono text-[9px] tracking-monowide text-paper/45">hash · 9f2c…ae71</div>
+              </div>
+              <div class="mt-2 font-mono text-[11px] text-paper/85 leading-[1.6] flex flex-wrap gap-x-5 gap-y-1">
+                <span>traced <span class="text-accent">✓</span></span>
+                <span>replay <span class="text-accent">✓</span></span>
+                <span>signed <span class="text-accent">✓</span></span>
+              </div>
+            </div>
+          </div>
+        </a>
+        <div class="mt-3 meta-mono">Synthetic data · live POC</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="rule max-w-[1180px] mx-auto"></div>
+
+  <!-- 01 — PROBLEM -->
+  <section class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 pt-24 sm:pt-32 pb-24 sm:pb-32">
+    <div class="grid grid-cols-12 gap-x-10 gap-y-12">
+      <div class="col-span-12 lg:col-span-4">
+        <div class="section-mark"><span class="num">01</span>Where it breaks</div>
+        <h2 class="display mt-6 text-[32px] sm:text-[40px] leading-[1.05] max-w-[14ch]">
+          Compliant on paper is not the same as audit-proof in production.
+        </h2>
+      </div>
+
+      <div class="col-span-12 lg:col-span-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-12">
+          <div>
+            <div class="meta-mono text-accent">Scenario A · Audit / CMS exposure</div>
+            <p class="prose-body mt-4">
+              A claims or prior-auth model is live. Decisions go out every day. Then CMS asks why the model denied a specific case last quarter — and the team can't reconstruct it. The model isn't broken. <strong>The audit trail is.</strong>
+            </p>
+          </div>
+          <div>
+            <div class="meta-mono text-accent">Scenario B · Cloud burn / silent drift</div>
+            <p class="prose-body mt-4">
+              An ML pipeline ships predictions in production. The AWS bill is 3× what was budgeted. Half the spend is retry traffic from a feature that quietly degrades every Tuesday. Engineering is told to <em>optimize</em> without taking the system offline.
+            </p>
+          </div>
+        </div>
+
+        <div class="rule-strong mt-16"></div>
+        <p class="pull mt-10 text-[22px] sm:text-[26px] max-w-[44ch] text-ink">
+          Most healthcare AI fails audit not because of the model. It fails because nobody can reconstruct the decision. <span class="text-accent">That's an engineering problem.</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule max-w-[1180px] mx-auto"></div>
+
+  <!-- 02 — PROOF -->
+  <section id="proof" class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 pt-24 sm:pt-32 pb-24 sm:pb-32">
+    <div class="section-mark"><span class="num">02</span>Proof · Live POC · Synthetic data</div>
+
+    <div class="mt-10 grid grid-cols-12 gap-x-10 gap-y-12 items-start">
+      <div class="col-span-12 lg:col-span-5">
+        <h2 class="display text-[32px] sm:text-[44px] leading-[1.04] tracking-tightest text-ink">
+          Trace-Any-Denial<br/>Diagnostic.
+        </h2>
+        <div class="prose-body mt-7 space-y-5">
+          <p>
+            I built this to answer one question: when a payer AI denial decision is challenged — by a regulator, an audit, an appeal — <strong>can the decision actually be reconstructed?</strong>
+          </p>
+          <p>
+            The diagnostic runs on synthetic scenarios drawn from real payer workflows — prior auth, claims AI, UR nurse review, appeals replay — and walks through whether the denial path can be reconstructed end-to-end within ten minutes. It exposes the trace gaps most production systems quietly fail.
+          </p>
+          <p class="text-ink">
+            It's best seen walked through on a call.
+          </p>
+        </div>
+        <a href="https://trace-any-denial.vercel.app/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 mt-8 link-mono">
+          Open the diagnostic <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+
+      <div class="col-span-12 lg:col-span-7">
+        <a href="https://trace-any-denial.vercel.app/" target="_blank" rel="noopener noreferrer" class="block frame group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2">
+          <div class="frame-toolbar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="url-pill">trace-any-denial.vercel.app</span>
+          </div>
+          <div class="relative aspect-[16/10] bg-paper2 overflow-hidden">
+            <img src="/assets/trace-any-denial.png" alt="Trace-Any-Denial Diagnostic — a synthetic-data tool that walks through whether a payer AI denial decision can be reconstructed end-to-end. Shows scenario picker (prior auth, claims AI, UR nurse review, appeals replay) and the diagnostic inputs form." class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.015]" loading="lazy" />
+          </div>
+        </a>
+        <div class="mt-3 meta-mono">Live POC · synthetic data only · trace-any-denial.vercel.app</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule max-w-[1180px] mx-auto"></div>
+
+  <!-- 03 — APPROACH -->
+  <section class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 pt-24 sm:pt-32 pb-24 sm:pb-32">
+    <div class="grid grid-cols-12 gap-x-10 gap-y-12">
+      <div class="col-span-12 lg:col-span-4">
+        <div class="section-mark"><span class="num">03</span>How Kombocode works</div>
+        <h2 class="display mt-6 text-[32px] sm:text-[40px] leading-[1.05] max-w-[14ch]">
+          Audit-to-production. In that order.
+        </h2>
+        <p class="prose-body mt-6 max-w-[36ch]">
+          Engineering, not advisory. Hands on the system, not slides about the system.
+        </p>
+      </div>
+
+      <div class="col-span-12 lg:col-span-8">
+        <div class="grid grid-cols-1">
+          <div class="grid grid-cols-12 gap-x-6 py-8 border-t border-ink/10">
+            <div class="col-span-2 sm:col-span-1"><span class="step-num">01</span></div>
+            <div class="col-span-10 sm:col-span-3">
+              <div class="text-[20px] font-medium text-ink tracking-tightish">Trace.</div>
+            </div>
+            <div class="col-span-12 sm:col-span-8">
+              <p class="prose-body">
+                Reconstruct what the model actually did, at decision granularity. If a single decision can't be traced under audit pressure, nothing downstream matters.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-12 gap-x-6 py-8 border-t border-ink/10">
+            <div class="col-span-2 sm:col-span-1"><span class="step-num">02</span></div>
+            <div class="col-span-10 sm:col-span-3">
+              <div class="text-[20px] font-medium text-ink tracking-tightish">Stabilize.</div>
+            </div>
+            <div class="col-span-12 sm:col-span-8">
+              <p class="prose-body">
+                Find where production diverges from the lab: silent feature drift, retry storms, runaway cost, edge cases that never made it into the test set. Close those gaps before they become incidents.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-12 gap-x-6 py-8 border-t border-b border-ink/10">
+            <div class="col-span-2 sm:col-span-1"><span class="step-num">03</span></div>
+            <div class="col-span-10 sm:col-span-3">
+              <div class="text-[20px] font-medium text-ink tracking-tightish">Ship audit-ready.</div>
+            </div>
+            <div class="col-span-12 sm:col-span-8">
+              <p class="prose-body">
+                Get the system to the state where a CMS request or an internal compliance review is a 24-hour answer, not a six-week scramble.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 — ENGAGEMENTS -->
+  <section id="engagements" class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 pt-24 sm:pt-32 pb-24 sm:pb-32">
+    <div class="grid grid-cols-12 gap-x-10 gap-y-12">
+      <div class="col-span-12 lg:col-span-4">
+        <div class="section-mark"><span class="num">04</span>Engagements</div>
+        <h2 class="display mt-6 text-[32px] sm:text-[40px] leading-[1.05] max-w-[14ch]">
+          Two ways to work together.
+        </h2>
+      </div>
+
+      <div class="col-span-12 lg:col-span-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          <article class="card relative bg-paper border border-ink/12 rounded-sm p-7 sm:p-8">
+            <div class="meta-mono text-accent">Engagement 01</div>
+            <h3 class="display mt-3 text-[24px] sm:text-[28px] leading-[1.1] tracking-tightish text-ink">
+              Production Stabilization Retainer
+            </h3>
+            <dl class="mt-7 space-y-5">
+              <div>
+                <dt class="meta-mono">For</dt>
+                <dd class="prose-body mt-1.5">Live-but-fragile AI/ML systems that are failing audits, burning cloud budget, or both.</dd>
+              </div>
+              <div>
+                <dt class="meta-mono">What</dt>
+                <dd class="prose-body mt-1.5">Embedded engineering on the system. Trace decisions, instrument the pipeline, harden the runtime, drive down cost. Ongoing.</dd>
+              </div>
+              <div>
+                <dt class="meta-mono">How it starts</dt>
+                <dd class="prose-body mt-1.5">90-minute technical review of the system in its current state. Written diagnostic inside five business days. Engagement scoped from there.</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article class="card relative bg-paper border border-ink/12 rounded-sm p-7 sm:p-8">
+            <div class="meta-mono text-accent">Engagement 02</div>
+            <h3 class="display mt-3 text-[24px] sm:text-[28px] leading-[1.1] tracking-tightish text-ink">
+              Architect-and-Build
+            </h3>
+            <dl class="mt-7 space-y-5">
+              <div>
+                <dt class="meta-mono">For</dt>
+                <dd class="prose-body mt-1.5">Teams designing and shipping a new production-grade AI/ML system in a regulated environment — that has to be audit-ready from day one.</dd>
+              </div>
+              <div>
+                <dt class="meta-mono">What</dt>
+                <dd class="prose-body mt-1.5">Architecture, build, harden, ship. Hands on the code. Audit-readiness baked in, not bolted on.</dd>
+              </div>
+              <div>
+                <dt class="meta-mono">How it starts</dt>
+                <dd class="prose-body mt-1.5">Scoping call. Written architecture proposal. Fixed-scope engagement.</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule max-w-[1180px] mx-auto"></div>
+
+  <!-- 05 — CASE STUDIES -->
+  <section class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 pt-24 sm:pt-32 pb-24 sm:pb-32">
+    <div class="grid grid-cols-12 gap-x-10 gap-y-12">
+      <div class="col-span-12 lg:col-span-4">
+        <div class="section-mark"><span class="num">05</span>Case studies</div>
+        <h2 class="display mt-6 text-[32px] sm:text-[40px] leading-[1.05] max-w-[14ch]">
+          The pattern, in production.
+        </h2>
+        <p class="prose-body mt-6 max-w-[36ch]">
+          Two engagements, anonymized by sector and stage. The transferable pattern: rescue and stabilize regulated-healthcare AI in production.
+        </p>
+      </div>
+
+      <div class="col-span-12 lg:col-span-8 space-y-10">
+        <article class="border border-ink/12 rounded-sm p-7 sm:p-9 card">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="meta-mono">Case 01</div>
+            <div class="meta-mono text-accent">Pharma · live production</div>
+          </div>
+          <h3 class="display mt-4 text-[24px] sm:text-[30px] leading-[1.1] tracking-tightish text-ink max-w-[34ch]">
+            Clinical-trial prediction platform stabilization.
+          </h3>
+          <dl class="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-6">
+            <div class="sm:col-span-3">
+              <dt class="meta-mono">State on arrival</dt>
+              <dd class="prose-body mt-2">A live clinical-trial prediction platform. AWS spend trending well over budget.</dd>
+            </div>
+            <div class="sm:col-span-3">
+              <dt class="meta-mono">Work</dt>
+              <dd class="prose-body mt-2">Stabilized the platform. Drove down infrastructure cost.</dd>
+            </div>
+            <div class="sm:col-span-3">
+              <dt class="meta-mono">Outcome</dt>
+              <dd class="prose-body mt-2"><strong>AWS spend reduced — saved six figures annually.</strong></dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="border border-ink/12 rounded-sm p-7 sm:p-9 card">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="meta-mono">Case 02</div>
+            <div class="meta-mono text-accent">Pharma · built, then shelved pre-deployment</div>
+          </div>
+          <h3 class="display mt-4 text-[24px] sm:text-[30px] leading-[1.1] tracking-tightish text-ink max-w-[34ch]">
+            A shelved LLM, brought through audit into production.
+          </h3>
+          <dl class="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-6">
+            <div class="sm:col-span-3">
+              <dt class="meta-mono">State on arrival</dt>
+              <dd class="prose-body mt-2">An in-house LLM for clinical-trial patient enrollment had been mothballed — too risky to ship under scrutiny.</dd>
+            </div>
+            <div class="sm:col-span-3">
+              <dt class="meta-mono">Work</dt>
+              <dd class="prose-body mt-2">I rebuilt it to be auditable end-to-end and carried it through review into live production.</dd>
+            </div>
+            <div class="sm:col-span-3">
+              <dt class="meta-mono">Outcome</dt>
+              <dd class="prose-body mt-2"><strong>Live in production. Through audit. Doing the work it was built for.</strong></dd>
+            </div>
+          </dl>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule max-w-[1180px] mx-auto"></div>
+
+  <!-- 06 — FOUNDER + TRACK RECORD -->
+  <section class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 pt-24 sm:pt-32 pb-24 sm:pb-32">
+    <div class="section-mark"><span class="num">06</span>Who you're hiring</div>
+
+    <div class="mt-10 grid grid-cols-12 gap-x-10 gap-y-14">
+      <!-- Founder photo -->
+      <div class="col-span-12 sm:col-span-4 lg:col-span-3">
+        <div class="aspect-square w-full bg-paper2 border border-ink/12 rounded-sm relative overflow-hidden">
+          <img src="/assets/elena.jpg" alt="Elena Rodin, founder of Kombocode" class="absolute inset-0 w-full h-full object-cover object-[center_25%]" loading="lazy" decoding="async" width="780" height="1031" />
+        </div>
+      </div>
+
+      <div class="col-span-12 sm:col-span-8 lg:col-span-9">
+        <h2 class="display text-[34px] sm:text-[44px] leading-[1.04] tracking-tightest text-ink">
+          I'm Elena Rodin.
+        </h2>
+        <div class="prose-body mt-7 max-w-[60ch] space-y-5">
+          <p>
+            I'm a software engineer. Twenty years putting AI and ML systems into production in regulated, high-stakes environments. Python, Java, Kotlin, React, Angular, AWS.
+          </p>
+          <p>
+            Every Kombocode engagement runs through me personally. I lead the discovery, architecture, and technical reviews.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Track record -->
+    <div class="mt-20 sm:mt-24 border-t border-ink/10 pt-12">
+      <div class="grid grid-cols-12 gap-x-10 gap-y-10">
+        <div class="col-span-12 lg:col-span-4">
+          <div class="meta-mono">Track record</div>
+          <h3 class="display mt-4 text-[24px] sm:text-[30px] leading-[1.1] tracking-tightish max-w-[22ch]">
+            Two decades of engineering engagements across regulated, high-stakes industries.
+          </h3>
+        </div>
+        <div class="col-span-12 lg:col-span-8">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8">
+            <div>
+              <dt class="meta-mono text-accent">Healthcare payers &amp; care management</dt>
+              <dd class="mt-2 text-[17px] leading-[1.55] text-ink/85">McKesson Health Solutions · AmeriHealth Administrators · MEDecision</dd>
+            </div>
+            <div>
+              <dt class="meta-mono text-accent">Pharma</dt>
+              <dd class="mt-2 text-[17px] leading-[1.55] text-ink/85">AstraZeneca</dd>
+            </div>
+            <div>
+              <dt class="meta-mono text-accent">Aerospace &amp; defense</dt>
+              <dd class="mt-2 text-[17px] leading-[1.55] text-ink/85">Boeing · Lockheed Martin</dd>
+            </div>
+            <div>
+              <dt class="meta-mono text-accent">Financial services</dt>
+              <dd class="mt-2 text-[17px] leading-[1.55] text-ink/85">Bank of America</dd>
+            </div>
+          </dl>
+          <p class="meta-mono mt-10 max-w-[60ch]">Engaged as a consultant. Listed to show technical environment — not as case-study clients.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="contact" class="relative z-10 mt-12 bg-ink text-paper">
+    <div class="grain absolute inset-0 z-0 opacity-50 mix-blend-soft-light"></div>
+    <div class="relative z-10 max-w-[1180px] mx-auto px-6 sm:px-10 py-24 sm:py-32">
+      <div class="grid grid-cols-12 gap-x-10 gap-y-10">
+        <div class="col-span-12 lg:col-span-7">
+          <div class="font-mono text-[11px] tracking-monoxl uppercase text-accent">— Contact</div>
+          <h2 class="display mt-6 text-[36px] sm:text-[52px] leading-[1.04] tracking-tightest max-w-[18ch]">
+            Have a system that needs to hold up?
+          </h2>
+          <p class="mt-7 max-w-[52ch] text-[18px] leading-[1.6] text-paper/75">
+            Thirty minutes, on the phone. We talk about what's live, what's fragile, what's about to be audited. If there's a fit, we go from there.
+          </p>
+        </div>
+        <div class="col-span-12 lg:col-span-5 flex flex-col justify-end gap-6">
+          <a href="https://calendly.com/elena-rodin/30min" target="_blank" rel="noopener noreferrer" class="btn-primary self-start" style="background: var(--paper); color: var(--ink);">
+            Book a 30-min technical call
+            <span class="arrow" aria-hidden="true"></span>
+          </a>
+          <div>
+            <div class="font-mono text-[11px] tracking-monoxl uppercase text-paper/45">Or directly</div>
+            <a href="mailto:Elena.Rodin@outlook.com" class="block mt-2 font-mono text-[15px] text-paper hover:text-accent transition-colors">Elena.Rodin@outlook.com</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative z-10 bg-ink text-paper/55 border-t border-paper/8">
+    <div class="max-w-[1180px] mx-auto px-6 sm:px-10 py-8 flex items-center justify-between flex-wrap gap-3">
+      <div class="flex items-center gap-3">
+        <span class="inline-block w-[8px] h-[8px] bg-accent rotate-45"></span>
+        <span class="font-mono text-[12px] tracking-monowide uppercase text-paper/65">Kombocode</span>
+        <span class="font-mono text-[12px] tracking-monowide text-paper/40">· kombocode.ai</span>
+      </div>
+      <div class="font-mono text-[12px] tracking-monowide text-paper/40">© 2026</div>
+    </div>
+  </footer>
+
+  <!-- Hero canvas — cursor-following warm-toned trails, vanilla-JS port of the React canvas component. -->
+  <script>
+  (function () {
+    const canvas = document.getElementById('hero-canvas');
+    if (!canvas) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    const hero = canvas.parentElement;
+    const ctx = canvas.getContext('2d');
+
+    // Tuned for subtlety on a light, warm background:
+    //   fewer trails, narrower hue range (olive → green-yellow), lower alpha.
+    const E = { friction: 0.5, trails: 36, size: 40, dampening: 0.025, tension: 0.99 };
+    const HUE = { offset: 72, amplitude: 22, freq: 0.0015 };
+    const pos = { x: 0, y: 0 };
+    let lines = [];
+    let running = true;
+    let wavePhase = Math.random() * 2 * Math.PI;
+    let raf = 0;
+
+    function Node() { this.x = 0; this.y = 0; this.vx = 0; this.vy = 0; }
+
+    function Line(spring) {
+      this.spring = spring + 0.1 * Math.random() - 0.05;
+      this.friction = E.friction + 0.01 * Math.random() - 0.005;
+      this.nodes = [];
+      for (let i = 0; i < E.size; i++) {
+        const n = new Node();
+        n.x = pos.x; n.y = pos.y;
+        this.nodes.push(n);
+      }
+    }
+    Line.prototype.update = function () {
+      let s = this.spring;
+      let t = this.nodes[0];
+      t.vx += (pos.x - t.x) * s;
+      t.vy += (pos.y - t.y) * s;
+      for (let i = 0, a = this.nodes.length; i < a; i++) {
+        t = this.nodes[i];
+        if (i > 0) {
+          const p = this.nodes[i - 1];
+          t.vx += (p.x - t.x) * s;
+          t.vy += (p.y - t.y) * s;
+          t.vx += p.vx * E.dampening;
+          t.vy += p.vy * E.dampening;
+        }
+        t.vx *= this.friction;
+        t.vy *= this.friction;
+        t.x += t.vx;
+        t.y += t.vy;
+        s *= E.tension;
+      }
+    };
+    Line.prototype.draw = function () {
+      let e, t;
+      let nx = this.nodes[0].x, ny = this.nodes[0].y;
+      ctx.beginPath();
+      ctx.moveTo(nx, ny);
+      let a;
+      for (a = 1; a < this.nodes.length - 2; a++) {
+        e = this.nodes[a]; t = this.nodes[a + 1];
+        nx = 0.5 * (e.x + t.x);
+        ny = 0.5 * (e.y + t.y);
+        ctx.quadraticCurveTo(e.x, e.y, nx, ny);
+      }
+      e = this.nodes[a]; t = this.nodes[a + 1];
+      ctx.quadraticCurveTo(e.x, e.y, t.x, t.y);
+      ctx.stroke();
+    };
+
+    function initLines() {
+      lines = [];
+      for (let i = 0; i < E.trails; i++) {
+        lines.push(new Line(0.45 + (i / E.trails) * 0.025));
+      }
+    }
+
+    function resize() {
+      const r = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(r.width));
+      canvas.height = Math.max(1, Math.floor(r.height));
+      if (!pos.x && !pos.y) {
+        // Anchor initial trails near the right side of the hero, between
+        // the headline and the diagnostic card, so a first impression has
+        // some motion even before the user touches the cursor.
+        pos.x = canvas.width * 0.55;
+        pos.y = canvas.height * 0.45;
+      }
+      initLines();
+    }
+
+    function pointerFromEvent(e) {
+      const r = canvas.getBoundingClientRect();
+      if (e.touches && e.touches[0]) {
+        pos.x = e.touches[0].clientX - r.left;
+        pos.y = e.touches[0].clientY - r.top;
+      } else {
+        pos.x = e.clientX - r.left;
+        pos.y = e.clientY - r.top;
+      }
+    }
+
+    function render() {
+      if (!running) return;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = 'lighter';
+      wavePhase += HUE.freq;
+      const hue = Math.round(HUE.offset + Math.sin(wavePhase) * HUE.amplitude);
+      ctx.strokeStyle = 'hsla(' + hue + ',60%,42%,0.045)';
+      ctx.lineWidth = 9;
+      for (const line of lines) { line.update(); line.draw(); }
+      raf = requestAnimationFrame(render);
+    }
+
+    function start() {
+      if (running && raf) return;
+      running = true;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(render);
+    }
+    function stop() {
+      running = false;
+      cancelAnimationFrame(raf);
+    }
+
+    // Listen on the hero section so trails only respond when the cursor is in the hero.
+    hero.addEventListener('mousemove', pointerFromEvent);
+    hero.addEventListener('touchmove', pointerFromEvent, { passive: true });
+    window.addEventListener('resize', resize);
+    window.addEventListener('blur', stop);
+    window.addEventListener('focus', start);
+
+    // Pause when the hero scrolls out of view.
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        for (const ent of entries) ent.isIntersecting ? start() : stop();
+      });
+      io.observe(hero);
+    }
+
+    resize();
+    render();
+  })();
+  </script>
+</body>
+</html>
