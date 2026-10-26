@@ -1,0 +1,30 @@
+# Kombocode
+
+> Kombocode is an AI engineering consultancy founded in 2016 by Elena Rodin, based in Doylestown, Pennsylvania, USA. Kombocode builds production grade AI systems that survive audits and regulatory review, for regulated teams. Its flagship vertical is payer tech (US health plans) and care management, and it also works with legal tech and regulated SaaS teams. Not affiliated with Kombo.dev or KomboAI.
+
+## Who we are
+
+- Founder and principal engineer: Elena Rodin, 20+ years of enterprise engineering across aerospace, pharma, financial services, and healthcare (Boeing, Lockheed Martin, AstraZeneca, Comcast, Bank of America, McKesson Health Solutions, AmeriHealth Administrators, MEDecision).
+- Legal entity: Rodins Management LLC (DBA Kombocode).
+- Typical clients: Series B to growth stage companies, 80 to 300 employees, US based, plus earlier stage teams facing a live audit.
+- Website: https://kombocode.ai (canonical; kombocode.com is the legacy domain)
+- Contact: elena.rodin@kombocode.ai
+- LinkedIn: https://www.linkedin.com/in/elenarodin
+
+## What we do
+
+- Build AI systems for regulated workflows that hold up in production, not demos.
+- Audit ready by design: every AI decision is reconstructable after the fact, with the evidence an auditor, a regulator, or a customer security review asks for.
+- Work inside client compliance stacks such as Vanta and Drata, aligned to SOC 2 and HIPAA expectations.
+- Step in when AI in regulated workflows breaks in production: stalled pilots, denial and prior authorization systems, care management tooling.
+- Core stack: Java, React, Angular, Kotlin, AWS.
+
+## Proof and demos
+
+- [Trace-Any-Denial](https://trace.kombocode.ai): a working diagnostic that reconstructs the decision trail behind payer AI denials, showing what the AI did and what the human reviewer saw.
+- Case studies on the website include Comcast Business mobile app delivery and Zonar ground traffic control and EV integration.
+
+## Key pages
+
+- [Home](https://kombocode.ai/): production grade engineering for healthcare AI under audit, engagements and case studies.
+- [LinkedIn](https://www.linkedin.com/in/elenarodin): Elena Rodin publishes twice weekly on audit ready AI in regulated industries.
